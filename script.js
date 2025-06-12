@@ -63,6 +63,11 @@ div.addEventListener("mouseleave", () => {
     clearInterval(intervalId);
     
 })
+div.addEventListener("mousedown", () => {
+    intervalId = setInterval(() => {
+        target.style.opacity = `${+target.style.opacity-0.01}`
+    }, 100);
+})
 console.log(target);
 }
 }

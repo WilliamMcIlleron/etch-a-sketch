@@ -110,21 +110,43 @@
 
     /* --- Controls --------------------------------------------------------- */
 
-    modeButtons.forEach(function (button) {
-        button.addEventListener('click', function () {
-            mode = button.dataset.mode;
-            modeButtons.forEach(function (other) {
-                other.setAttribute('aria-checked', String(other === button));
-            });
+    // A radiogroup is expected to behave like one: arrow keys move between the
+    // options, and only the selected option is in the tab order.
+    function selectMode(button, moveFocus) {
+        mode = button.dataset.mode;
+        modeButtons.forEach(function (other) {
+            var on = other === button;
+            other.setAttribute('aria-checked', String(on));
+            other.tabIndex = on ? 0 : -1;
+        });
+        if (moveFocus) button.focus();
+    }
+
+    modeButtons.forEach(function (button, i) {
+        button.addEventListener('click', function () { selectMode(button); });
+
+        button.addEventListener('keydown', function (event) {
+            var step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
+            if (!step) return;
+            event.preventDefault();
+            selectMode(modeButtons[(i + step + modeButtons.length) % modeButtons.length], true);
         });
     });
 
-    // Live label while dragging, rebuild only on release: redrawing 10,000
-    // cells on every tick of the slider is not worth it.
+    // Resize while you drag rather than only on release, throttled to one
+    // rebuild per frame so dragging near 100 doesn't queue up dozens of them.
+    var pendingResize = null;
+
     sizeInput.addEventListener('input', function () {
         sizeValue.textContent = sizeInput.value + ' × ' + sizeInput.value;
+        if (pendingResize) return;
+        pendingResize = requestAnimationFrame(function () {
+            pendingResize = null;
+            buildGrid(Number(sizeInput.value));
+        });
     });
 
+    // Catches the final value if the last frame landed mid-drag.
     sizeInput.addEventListener('change', function () {
         buildGrid(Number(sizeInput.value));
     });
@@ -144,5 +166,6 @@
     /* --- Start ------------------------------------------------------------ */
 
     grid.classList.toggle('show-lines', linesInput.checked);
+    selectMode(document.querySelector('[data-mode="' + mode + '"]'));
     buildGrid(Number(sizeInput.value));
 })();

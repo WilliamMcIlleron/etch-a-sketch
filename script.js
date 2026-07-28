@@ -15,6 +15,7 @@
     var colourInput = document.getElementById('colour');
     var linesInput = document.getElementById('lines');
     var clearBtn = document.getElementById('clear');
+    var saveBtn = document.getElementById('save');
     var modeButtons = Array.prototype.slice.call(document.querySelectorAll('[data-mode]'));
 
     var STEPS = 10;
@@ -40,26 +41,45 @@
 
     /* --- Painting --------------------------------------------------------- */
 
-    function paint(cell) {
+    function wipe(cell) {
+        cell.style.backgroundColor = '';
+        delete cell.dataset.shade;
+    }
+
+    function applyTo(cell, action) {
         if (!cell || !cell.classList.contains('cell')) return;
 
-        if (mode === 'eraser') {
-            cell.style.backgroundColor = '';
-            delete cell.dataset.shade;
-            return;
-        }
+        if (action === 'eraser') { wipe(cell); return; }
 
         var shade = Number(cell.dataset.shade || 0);
 
-        // A fresh cell gets a colour; an already-painted one just deepens, so a
-        // second pass never changes the hue underneath.
-        if (!shade) {
-            cell.dataset.colour = mode === 'rainbow' ? randomColour() : hexToRgb(colourInput.value);
+        if (action === 'lighten') {
+            if (!shade) return;
+            shade -= 1;
+            if (!shade) { wipe(cell); return; }
+        } else {
+            // A fresh cell gets a colour; an already-painted one just deepens,
+            // so a second pass never changes the hue underneath.
+            if (!shade) {
+                cell.dataset.colour = action === 'rainbow' ? randomColour() : hexToRgb(colourInput.value);
+            }
+            shade = Math.min(shade + 1, STEPS);
         }
 
-        shade = Math.min(shade + 1, STEPS);
         cell.dataset.shade = shade;
         cell.style.backgroundColor = 'rgba(' + cell.dataset.colour + ', ' + (shade / STEPS) + ')';
+    }
+
+    // Holding the mouse button down lightens instead of darkening, which is the
+    // fastest way to pull a highlight back out of something you overworked.
+    // Eraser and Lighten are left alone, since overriding a brush the user has
+    // deliberately chosen would just be confusing.
+    function actionFor(event) {
+        var held = event.buttons > 0 || (drawing && event.type === 'pointerdown');
+        if (event.pointerType === 'mouse' && held && (mode === 'rainbow' || mode === 'solid')) {
+            return 'lighten';
+        }
+        return mode;
     }
 
     function randomColour() {
@@ -89,12 +109,12 @@
     // Mouse hovers to draw, the way the original toy behaves. Touch needs a
     // deliberate drag, otherwise the first tap would scribble on the way in.
     grid.addEventListener('pointerover', function (event) {
-        if (event.pointerType === 'mouse' || drawing) paint(event.target);
+        if (event.pointerType === 'mouse' || drawing) applyTo(event.target, actionFor(event));
     });
 
     grid.addEventListener('pointerdown', function (event) {
         drawing = true;
-        paint(event.target);
+        applyTo(event.target, actionFor(event));
         event.preventDefault();
     });
 
@@ -102,7 +122,7 @@
     // resolve it by coordinates instead.
     grid.addEventListener('pointermove', function (event) {
         if (!drawing || event.pointerType === 'mouse') return;
-        paint(document.elementFromPoint(event.clientX, event.clientY));
+        applyTo(document.elementFromPoint(event.clientX, event.clientY), actionFor(event));
     });
 
     window.addEventListener('pointerup', function () { drawing = false; });
@@ -156,6 +176,48 @@
     });
 
     clearBtn.addEventListener('click', clearGrid);
+
+    /* --- Saving ----------------------------------------------------------- */
+
+    // The drawing lives in the DOM, so exporting means repainting it onto a
+    // canvas. Inline styles are read rather than computed styles: the values
+    // are the ones we set ourselves, and 10,000 getComputedStyle calls would
+    // force a layout pass each time.
+    saveBtn.addEventListener('click', function () {
+        var size = Math.round(Math.sqrt(grid.children.length));
+        var side = 1024;
+        var cellPx = side / size;
+
+        var canvas = document.createElement('canvas');
+        canvas.width = canvas.height = side;
+        var ctx = canvas.getContext('2d');
+
+        var screenColour = getComputedStyle(document.documentElement)
+            .getPropertyValue('--screen').trim() || '#ffffff';
+        ctx.fillStyle = screenColour;
+        ctx.fillRect(0, 0, side, side);
+
+        Array.prototype.forEach.call(grid.children, function (cell, i) {
+            var bg = cell.style.backgroundColor;
+            if (!bg) return;
+            ctx.fillStyle = bg;
+            // Ceil the size so neighbouring cells overlap by a fraction of a
+            // pixel, otherwise seams show through at awkward grid sizes.
+            ctx.fillRect((i % size) * cellPx, Math.floor(i / size) * cellPx,
+                         Math.ceil(cellPx), Math.ceil(cellPx));
+        });
+
+        canvas.toBlob(function (blob) {
+            var url = URL.createObjectURL(blob);
+            var link = document.createElement('a');
+            link.href = url;
+            link.download = 'etch-a-sketch.png';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        }, 'image/png');
+    });
 
     // Picking a colour should switch you to the colour brush; having to press
     // two things to use it is the sort of small friction nobody reports.

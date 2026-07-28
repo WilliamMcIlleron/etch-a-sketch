@@ -11,13 +11,16 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <!-- ?v= is bumped whenever these change. GitHub Pages caches assets, and
          without it a returning visitor can run new HTML against an old script. -->
-    <link rel="stylesheet" href="styles.css?v=2">
+    <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
     <main class="page">
         <header class="intro">
             <h1>Etch A Sketch</h1>
-            <p>Drag across the grid to draw. Go over the same square twice and the colour deepens.</p>
+            <p>
+                Move across the grid to draw. Go over the same square twice and the colour
+                deepens. Hold the mouse button down to lighten it again.
+            </p>
         </header>
 
         <div class="device">
@@ -36,6 +39,7 @@
                 <div class="segmented" role="radiogroup" aria-label="Brush mode">
                     <button type="button" role="radio" aria-checked="true"  data-mode="rainbow">Rainbow</button>
                     <button type="button" role="radio" aria-checked="false" data-mode="solid">Colour</button>
+                    <button type="button" role="radio" aria-checked="false" data-mode="lighten">Lighten</button>
                     <button type="button" role="radio" aria-checked="false" data-mode="eraser">Eraser</button>
                 </div>
             </fieldset>
@@ -55,7 +59,10 @@
                 <label for="lines">Grid lines</label>
             </div>
 
-            <button type="button" class="btn" id="clear">Clear</button>
+            <div class="control control--actions">
+                <button type="button" class="btn btn--ghost" id="save">Save PNG</button>
+                <button type="button" class="btn" id="clear">Clear</button>
+            </div>
         </div>
 
         <footer class="credit">
@@ -67,6 +74,6 @@
         </footer>
     </main>
 
-    <script src="script.js?v=2"></script>
+    <script src="script.js?v=3"></script>
 </body>
 </html>

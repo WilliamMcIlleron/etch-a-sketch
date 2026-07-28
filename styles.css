@@ -209,6 +209,16 @@ input[type='checkbox'] { accent-color: var(--frame); width: 1rem; height: 1rem; 
 
 .btn:hover { background: var(--frame); border-color: var(--frame); }
 
+.btn--ghost {
+    background: none;
+    color: var(--ink);
+    border-color: var(--rule);
+}
+
+.btn--ghost:hover { background: none; border-color: var(--frame); color: var(--frame); }
+
+.control--actions { flex-direction: row; gap: 0.5rem; }
+
 /* --- Credit --------------------------------------------------------------- */
 
 .credit {

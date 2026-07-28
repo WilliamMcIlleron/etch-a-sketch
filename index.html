@@ -2,12 +2,69 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <title>Etch A Sketch</title>
-    <link rel="stylesheet" href="./styles.css"></link> 
+    <meta name="description" content="Drag across the grid to draw. Colours deepen the more you go over them. Built in plain JavaScript, no dependencies.">
+    <meta name="theme-color" content="#f5f2ec">
+
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    
-<script src="./script.js"></script>
+    <main class="page">
+        <header class="intro">
+            <h1>Etch A Sketch</h1>
+            <p>Drag across the grid to draw. Go over the same square twice and the colour deepens.</p>
+        </header>
+
+        <div class="device">
+            <div class="screen">
+                <div class="grid" id="grid" aria-label="Drawing canvas"></div>
+            </div>
+            <div class="knobs" aria-hidden="true">
+                <span class="knob"></span>
+                <span class="knob"></span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <fieldset class="control control--modes">
+                <legend>Brush</legend>
+                <div class="segmented" role="radiogroup" aria-label="Brush mode">
+                    <button type="button" role="radio" aria-checked="true"  data-mode="rainbow">Rainbow</button>
+                    <button type="button" role="radio" aria-checked="false" data-mode="solid">Colour</button>
+                    <button type="button" role="radio" aria-checked="false" data-mode="eraser">Eraser</button>
+                </div>
+            </fieldset>
+
+            <div class="control">
+                <label for="colour">Colour</label>
+                <input type="color" id="colour" value="#c8452f">
+            </div>
+
+            <div class="control">
+                <label for="size">Grid <span class="value" id="sizeValue">32 &times; 32</span></label>
+                <input type="range" id="size" min="4" max="100" step="1" value="32">
+            </div>
+
+            <div class="control control--checkbox">
+                <input type="checkbox" id="lines" checked>
+                <label for="lines">Grid lines</label>
+            </div>
+
+            <button type="button" class="btn" id="clear">Clear</button>
+        </div>
+
+        <footer class="credit">
+            <p>
+                Plain HTML, CSS and JavaScript. No framework, no build step.
+                <a href="https://github.com/WilliamMcIlleron/etch-a-sketch">Source</a> ·
+                built by <a href="https://williammcilleron.netlify.app">William McIlleron</a>
+            </p>
+        </footer>
+    </main>
+
+    <script src="script.js"></script>
 </body>
 </html>
